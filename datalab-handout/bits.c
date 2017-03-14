@@ -12,7 +12,6 @@
  * it's not good practice to ignore compiler warnings, but in this
  * case it's OK.  
  */
-
 #if 0
 /*
  * Instructions to Students:
@@ -150,10 +149,12 @@ int bitAnd(int x, int y) {
  *   Rating: 2
  */
 int getByte(int x, int n) {
-  unsigned int m = x << ((3 - n) * 8);
-  m = m >> 24;
-
-  return m;
+  //n * 8
+  n = n<<3;
+  //x右移8*n位
+  x = x >> n;
+  //保留最后8位
+  return 0xff & x;
 }
 /* 
  * logicalShift - shift x to the right by n, using a logical shift
@@ -164,7 +165,7 @@ int getByte(int x, int n) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-  return (unsigned int)x >> n;
+  return (x>>n)&(~((1<<31)>>n<<1));
 }
 /*
  * bitCount - returns count of number of 1's in word
@@ -174,19 +175,27 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
+  //Integer constants 0 through 255 (0xFF)
+  //令 i = 0x11111111
+  int sum = 0;
+  int i = 0x11| (0x11 << 8);
+  i = i |(i << 16);
+
   //对于每四位，通过不停的移位运算将前三位的1加到第四位上
-  int i = 0x11111111,sum = 0;
   sum += x & i;
   sum += (x >> 1) & i;
   sum += (x >> 2) & i;
   sum += (x >> 3) & i;
 
+  //令i = 0xffff;
+  i = 0xff | (0xff<<8);
+
   //将前16位与后16位相加
-  i = 0xffff;
   sum = (sum >> 16) + (i & sum);
 
+  //令i = 0x0f0f
   //整理每8位之和
-  i = 0x0f0f;
+  i = 0x0f | (0x0f<<8);
   sum = ((sum >> 4) & i) + (sum & i);
 
   //将前8位与后8位相加
@@ -245,7 +254,7 @@ int fitsBits(int x, int n) {
  */
 int divpwr2(int x, int n) {
   //取符号
-  unsigned t = x >> 31; 
+  int t = x >> 31; 
   int tmp = (1 << n) + ~0;
   //取后n位 
   int tt = tmp & x;
@@ -270,7 +279,7 @@ int negate(int x) {
  *   Rating: 3
  */
 int isPositive(int x) {
-  unsigned m = x >> 31;
+  int m = x >> 31;
 
   return !m & (!!x);
 }
@@ -288,7 +297,7 @@ int isLessOrEqual(int x, int y) {
   int p = !!(x>>31);
   int q = !!(y>>31);
 
-  return (!((unsigned)m>>31)&(!(p^q))) | (p&!q);
+  return (!(m>>31)&(!(p^q))) | (p&!q);
 }
 /*
  * ilog2 - return floor(log base 2 of x), where x > 0
@@ -338,12 +347,13 @@ int ilog2(int x) {
  */
 unsigned float_neg(unsigned uf) {
   unsigned temp;
+  int t;
   //最高位取反
   temp = uf ^ 0x80000000;
   //E全为1。这时，如果有效数字M全为0，表示±无穷大（正负取决于符号位s）；
   //如果有效数字M不全为0，表示这个数不是一个数（NaN），符号位无关紧要。
   //最高位清零
-  int t = uf & 0x7fffffff;
+  t = uf & 0x7fffffff;
   if(t > 0x7f800000)
     return uf;
   return temp;
@@ -387,9 +397,9 @@ unsigned float_i2f(int x) {
  *   Rating: 4
  */
 unsigned float_twice(unsigned uf) {
-  //若是指数为0情况
+  // 若是指数为0情况
   if((uf & 0x7F800000) == 0)
-    return ((uf & 0x007FFFFF) << 1) | (0x80000000 & uf);//特殊情况0x80000000
+    return (uf << 1) | (0x80000000 & uf);//特殊情况0x80000000
   //若数为NaN
   else if((uf & 0x7fffffff) >= 0x7f800000)
   //else if ((f & 0x7F800000) != 0x7F800000)
