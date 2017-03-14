@@ -280,7 +280,6 @@ int negate(int x) {
  */
 int isPositive(int x) {
   int m = x >> 31;
-
   return !m & (!!x);
 }
 /* 
